@@ -1,5 +1,5 @@
 import express from 'express';
-import { } from  './database.js'
+import { storeTripInfo } from  './database.js'
 
 const app = express();
 
@@ -21,9 +21,9 @@ app.post('/create-trip', async (req, res) => {
     const contacts = req.body.contacts;
     const itemsRequested = req.body.items;
     
-    console.log(tripInfo, itemsRequested, contacts)
-})//stores trip information
-  //hosts can accept or decline a trip that was created as a request
+    const trip = await storeTripInfo(tripInfo, contacts, itemsRequested);
+    res.json(trip);
+})//stores trip information that was either requested or created by the host
 
 
 
