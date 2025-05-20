@@ -17,11 +17,11 @@ app.post('/create-user', async (req, res) => {
 })//store user info 
 
 app.post('/create-trip', async (req, res) => {
-    const tripInfo = req.body.tripInfo;
-    const contacts = req.body.contacts;
-    const itemsRequested = req.body.items;
-    
-    const trip = await storeTripInfo(tripInfo, contacts, itemsRequested);
+    const tripData = JSON.parse(req.body.tripInfo);
+    const contacts = JSON.parse(req.body.contacts);
+    const itemsRequested = JSON.parse(req.body.items);
+
+    const trip = await storeTripInfo(tripData, contacts, itemsRequested);
     res.json(trip);
 })//stores trip information that was either requested or created by the host
 

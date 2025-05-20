@@ -33,21 +33,23 @@ export async function storeTripInfo(tripData, requestors, requestedItems){
         `INSERT INTO Trips(tripId, location, locationDescription, host, status)
          VALUES(?, ?, ?, ?, ?)`,[tripData.tripId, tripData.location, tripData.locationDescription, tripData.host, tripData.status]
     );
-    storeRequestedItems(requestors, requestedItems, tripData.tripId)
+    storeRequestorInfo(requestors, requestedItems, tripData.tripId)
 }
 
 export async function storeRequestorInfo(requestorArr, items, tripId){
     if(requestorArr){
-        requestorArr.array.forEach(async requestor => {
+        requestorArr.forEach(async requestor => {
             await pool.query(
-                `INSERT INTO Requested_Items(requestor, tripId)`, [requestor.phoneNumber, tripId]
+                `INSERT INTO Requested_Items(requestor, tripId)
+                 VALUES(?,?)`, [requestor.phoneNumber, tripId]
             )
         });
     }//store the requestors that can request for items within a trip
     else{
         items.forEach(async item => {
             await pool.query(
-                `INSERT INTO Requested_Items(itemName, itemDescription, requestor, tripId)`, [item.itemName, item.itemDescription, item.requestor, tripId]
+                `INSERT INTO Requested_Items(itemName, itemDescription, requestor, tripId)
+                 VALUES(?,?,?,?)`, [item.itemName, item.itemDescription, item.requestor, tripId]
             )
         });
     }//store the items a requestor has requested within a trip
