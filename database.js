@@ -9,18 +9,41 @@ const pool = mysql.createPool({
     database: process.env.MYSQL_DATABASE
 }).promise();
 
+async function getRequestedItems(involvedTrips){
+    involvedTrips.forEach(async trip =>{
+        const [itemsArray] = await pool.query(
+            `SELECT * FROM Requested_Items WHERE tripId = ?`, trip.tripId
+        );
+        trip.itemsRequested = itemsArray;
+    });
+}//get all items requested for each trip a user is involved in
+//and add array of items to each trip object
 
-export async function getHostedTrips(){
+export async function getHostedTrips(userNumber){
+    const [tripsHosted] = await pool.query(
+        `SELECT * FROM Trips WHERE host = ?`, userNumber 
+    );
+    if(tripsHosted.length > 0){
+        await getRequestedItems(tripsHosted)
+        return tripsHosted
+    }
+}//search for the trips a user is hosting
+//and the items requested(by all users) within each trip
 
-}
+export async function getRequestedTrips(userNumber){
+    const [tripsRequested] = await pool.query(
+        `SELECT DISTINCT Trips.tripId, Trips.host, Trips.location, Trips.locationDescription, Trips.status
+         FROM Requested_Items
+         JOIN Trips ON Requested_Items.tripId = Trips.tripId
+         WHERE Requested_Items.requestor = ?`, userNumber
+    );
+    if(tripsRequested.length > 0){
+        await getRequestedItems(tripsRequested)
+        return tripsRequested
+    }
+}//search for the trips a user can make requests to
+//and the items that have been requested(by all users) within each trip
 
-export async function getRequestedTrips(){
-
-}
-
-export async function getRequestedItems(){
-
-}
 
 
 
@@ -33,10 +56,10 @@ export async function storeTripInfo(tripData, requestors){
         `INSERT INTO Trips(tripId, location, locationDescription, host, status)
          VALUES(?, ?, ?, ?, ?)`,[tripData.tripId, tripData.location, tripData.locationDescription, tripData.host, tripData.status]
     );
-    storeRequestorInfo(requestors, tripData.itemsRequested, tripData.tripId)
+    await storeRequestorInfo(requestors, tripData.itemsRequested, tripData.tripId)
 }
 
-export async function storeRequestorInfo(requestorArr, items, tripId){
+async function storeRequestorInfo(requestorArr, items, tripId){
     if(requestorArr){
         requestorArr.forEach(async requestor => {
             await pool.query(

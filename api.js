@@ -1,5 +1,5 @@
 import express from 'express';
-import { storeTripInfo } from  './database.js'
+import { storeTripInfo, getHostedTrips, getRequestedTrips } from  './database.js'
 
 const app = express();
 
@@ -7,7 +7,12 @@ app.use(express.json());
 
 app.get('/trips', async (req, res) => {
 
-})//trips that have been requested or that are hosted by a user
+  const hostedTrips = await getHostedTrips("000");
+  const requestedTrips = await getRequestedTrips("000")
+
+  res.json(hostedTrips, requestedTrips)
+
+})//all trips user is hosting or can make requests for 
 
 
 
