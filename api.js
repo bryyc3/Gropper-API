@@ -19,9 +19,8 @@ app.post('/create-user', async (req, res) => {
 app.post('/create-trip', async (req, res) => {
     const tripData = JSON.parse(req.body.tripInfo);
     const contacts = JSON.parse(req.body.contacts);
-    const itemsRequested = JSON.parse(req.body.items);
 
-    const trip = await storeTripInfo(tripData, contacts, itemsRequested);
+    const trip = await storeTripInfo(tripData, contacts);
     res.json(trip);
 })//stores trip information that was either requested or created by the host
 

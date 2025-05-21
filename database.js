@@ -28,12 +28,12 @@ export async function createUser(){
 
 }
 
-export async function storeTripInfo(tripData, requestors, requestedItems){
+export async function storeTripInfo(tripData, requestors){
     await pool.query(
         `INSERT INTO Trips(tripId, location, locationDescription, host, status)
          VALUES(?, ?, ?, ?, ?)`,[tripData.tripId, tripData.location, tripData.locationDescription, tripData.host, tripData.status]
     );
-    storeRequestorInfo(requestors, requestedItems, tripData.tripId)
+    storeRequestorInfo(requestors, tripData.itemsRequested, tripData.tripId)
 }
 
 export async function storeRequestorInfo(requestorArr, items, tripId){
