@@ -9,38 +9,47 @@ const pool = mysql.createPool({
     database: process.env.MYSQL_DATABASE
 }).promise();
 
-async function getRequestedItems(involvedTrips){
-    involvedTrips.forEach(async trip =>{
-        const [itemsArray] = await pool.query(
-            `SELECT * FROM Requested_Items WHERE tripId = ?`, trip.tripId
-        );
-        trip.itemsRequested = itemsArray;
-    });
-}//get all items requested for each trip a user is involved in
-//and add array of items to each trip object
-
 export async function getHostedTrips(userNumber){
     const [tripsHosted] = await pool.query(
-        `SELECT * FROM Trips WHERE host = ?`, userNumber 
+        `
+        SELECT Trips.tripId, Trips.location, Trips.host, Trips.locationDescription, Trips.status,
+        COALESCE(
+            JSON_ARRAYAGG(
+                JSON_OBJECT('itemName', Requested_Items.itemName, 
+                            'itemDescription', Requested_Items.itemDescription,
+                            'requestor', Requested_Items.requestor)
+            ),
+            JSON_ARRAY()
+        ) AS itemsRequested
+        FROM Trips
+        LEFT JOIN Requested_Items ON Trips.tripId = Requested_Items.tripId
+        WHERE Trips.host = ?
+        GROUP BY Trips.tripId`,userNumber
     );
-    if(tripsHosted.length > 0){
-        await getRequestedItems(tripsHosted)
-        return tripsHosted
-    }
+ 
+    return tripsHosted
 }//search for the trips a user is hosting
 //and the items requested(by all users) within each trip
 
 export async function getRequestedTrips(userNumber){
     const [tripsRequested] = await pool.query(
-        `SELECT DISTINCT Trips.tripId, Trips.host, Trips.location, Trips.locationDescription, Trips.status
+        `SELECT DISTINCT Trips.tripId, Trips.host, Trips.location, Trips.locationDescription, Trips.status,
+         COALESCE(
+            JSON_ARRAYAGG(
+                JSON_OBJECT('itemName', Requested_Items.itemName, 
+                            'itemDescription', Requested_Items.itemDescription,
+                            'requestor', Requested_Items.requestor)
+            ),
+                JSON_ARRAY()
+            ) AS itemsRequested
          FROM Requested_Items
          JOIN Trips ON Requested_Items.tripId = Trips.tripId
-         WHERE Requested_Items.requestor = ?`, userNumber
+         WHERE Requested_Items.requestor = ?
+         GROUP BY Trips.tripId`, userNumber
     );
-    if(tripsRequested.length > 0){
-        await getRequestedItems(tripsRequested)
-        return tripsRequested
-    }
+
+    return tripsRequested
+    
 }//search for the trips a user can make requests to
 //and the items that have been requested(by all users) within each trip
 
@@ -59,12 +68,14 @@ export async function storeTripInfo(tripData, requestors){
     await storeRequestorInfo(requestors, tripData.itemsRequested, tripData.tripId)
 }
 
-async function storeRequestorInfo(requestorArr, items, tripId){
+function storeRequestorInfo(requestorArr, items, tripId){
     if(requestorArr){
         requestorArr.forEach(async requestor => {
+            requestor.itemName = "";
+            requestor.itemDescription = "";
             await pool.query(
-                `INSERT INTO Requested_Items(requestor, tripId)
-                 VALUES(?,?)`, [requestor.phoneNumber, tripId]
+                `INSERT INTO Requested_Items(requestor, tripId, itemName, itemDescription)
+                 VALUES(?,?,?,?)`, [requestor.phoneNumber, tripId, requestor.itemName, requestor.itemDescription]
             )
         });
     }//store the requestors that can request for items within a trip

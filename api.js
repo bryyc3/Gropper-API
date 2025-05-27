@@ -7,10 +7,14 @@ app.use(express.json());
 
 app.get('/trips', async (req, res) => {
 
-  const hostedTrips = await getHostedTrips("000");
-  const requestedTrips = await getRequestedTrips("000")
+  
+  const hostedTrips = await getHostedTrips("1111111111");
+  const requestedTrips = await getRequestedTrips("1111111111");
+  
+  const allTrips = {hostedTripData: hostedTrips,
+                    requestedTripData: requestedTrips};
 
-  res.json(hostedTrips, requestedTrips)
+  res.json(allTrips);
 
 })//all trips user is hosting or can make requests for 
 
