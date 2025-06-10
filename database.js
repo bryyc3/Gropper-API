@@ -26,7 +26,9 @@ export async function getHostedTrips(userNumber){
         WHERE Trips.host = ?
         GROUP BY Trips.tripId`,userNumber
     );
- 
+    if(tripsHosted.length == 0){
+        return null
+    }
     return tripsHosted
 }//search for the trips a user is hosting
 //and the items requested(by all users) within each trip
@@ -47,7 +49,9 @@ export async function getRequestedTrips(userNumber){
          WHERE Requested_Items.requestor = ?
          GROUP BY Trips.tripId`, userNumber
     );
-
+    if(tripsRequested.length == 0){
+        return null
+    }
     return tripsRequested
     
 }//search for the trips a user can make requests to
@@ -69,7 +73,7 @@ export async function storeTripInfo(tripData, requestors){
 }
 
 function storeRequestorInfo(requestorArr, items, tripId){
-    if(requestorArr){
+    if(requestorArr.length > 0){
         requestorArr.forEach(async requestor => {
             requestor.itemName = "";
             requestor.itemDescription = "";
