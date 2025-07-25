@@ -15,14 +15,22 @@ export async function getHostedTrips(userNumber){
         SELECT Trips.tripId, Trips.location, Trips.host, Trips.locationDescription, Trips.status,
         COALESCE(
             JSON_ARRAYAGG(
-                JSON_OBJECT('itemName', Requested_Items.itemName, 
-                            'itemDescription', Requested_Items.itemDescription,
-                            'requestor', Requested_Items.requestor)
-            ),
-            JSON_ARRAY()
-        ) AS itemsRequested
+                JSON_OBJECT('phoneNumber', Requested_Items.requestor, 
+                            'itemsRequested', Requested_Items.items)
+            ), JSON_ARRAY()
+        ) AS requestors
         FROM Trips
-        LEFT JOIN Requested_Items ON Trips.tripId = Requested_Items.tripId
+        LEFT JOIN (
+            SELECT tripId, requestor, 
+            JSON_ARRAYAGG(
+                JSON_OBJECT(
+                    'itemName', itemName,
+                    'itemDescription', itemDescription
+                )
+            ) AS items
+            FROM Requested_Items
+            GROUP BY tripId, requestor
+        ) Requested_Items ON Trips.tripId = Requested_Items.tripId
         WHERE Trips.host = ?
         GROUP BY Trips.tripId`,userNumber
     );
@@ -36,14 +44,21 @@ export async function getHostedTrips(userNumber){
 export async function getRequestedTrips(userNumber){
     const [tripsRequested] = await pool.query(
         `SELECT DISTINCT Trips.tripId, Trips.host, Trips.location, Trips.locationDescription, Trips.status,
-         COALESCE(
-            JSON_ARRAYAGG(
-                JSON_OBJECT('itemName', Requested_Items.itemName, 
-                            'itemDescription', Requested_Items.itemDescription,
-                            'requestor', Requested_Items.requestor)
-            ),
-                JSON_ARRAY()
-            ) AS itemsRequested
+         JSON_ARRAY(
+            JSON_OBJECT(
+                    'phoneNumber', Requested_Items.requestor,
+                    'itemsRequested',
+                    COALESCE(
+                        JSON_ARRAYAGG(
+                            JSON_OBJECT(
+                                'itemName', Requested_Items.itemName, 
+                                'itemDescription', Requested_Items.itemDescription
+                            )
+                        ),
+                        JSON_ARRAY()
+                    )
+                ) 
+         ) AS requestors    
          FROM Requested_Items
          JOIN Trips ON Requested_Items.tripId = Trips.tripId
          WHERE Requested_Items.requestor = ?
@@ -55,7 +70,7 @@ export async function getRequestedTrips(userNumber){
     return tripsRequested
     
 }//search for the trips a user can make requests to
-//and the items that have been requested(by all users) within each trip
+//and the items that have been requested(by the user) within each trip
 
 
 
@@ -64,17 +79,17 @@ export async function createUser(){
 
 }
 
-export async function storeTripInfo(tripData, requestors){
+export async function storeTripInfo(tripData, requestorsSelected){
     await pool.query(
         `INSERT INTO Trips(tripId, location, locationDescription, host, status)
          VALUES(?, ?, ?, ?, ?)`,[tripData.tripId, tripData.location, tripData.locationDescription, tripData.host, tripData.status]
     );
-    await storeRequestorInfo(requestors, tripData.itemsRequested, tripData.tripId)
+    await storeRequestorInfo(requestorsSelected, tripData.requestors, tripData.tripId)
 }
 
-function storeRequestorInfo(requestorArr, items, tripId){
-    if(requestorArr.length > 0){
-        requestorArr.forEach(async requestor => {
+function storeRequestorInfo(pickedRequestors, requestors, tripId){
+    if(pickedRequestors.length > 0){
+        pickedRequestors.forEach(async requestor => {
             requestor.itemName = "";
             requestor.itemDescription = "";
             await pool.query(
@@ -84,11 +99,21 @@ function storeRequestorInfo(requestorArr, items, tripId){
         });
     }//store the requestors that can request for items within a trip
     else{
-        items.forEach(async item => {
-            await pool.query(
-                `INSERT INTO Requested_Items(itemName, itemDescription, requestor, tripId)
-                 VALUES(?,?,?,?)`, [item.itemName, item.itemDescription, item.requestor, tripId]
-            )
+        requestors.forEach(async requestor => {
+            if(requestor.itemsRequested.length > 0){
+                requestor.itemsRequested.forEach(async item => {
+                    await pool.query(
+                        `INSERT INTO Requested_Items(itemName, itemDescription, requestor, tripId)
+                        VALUES(?,?,?,?)`, [item.itemName, item.itemDescription, requestor.phoneNumber, tripId]
+                    )
+                })
+            }
+            else{
+                await pool.query(
+                    `INSERT INTO Requested_Items(requestor, tripId, itemName, itemDescription)
+                    VALUES(?,?,?,?)`, [requestor.phoneNumber, tripId, requestor.itemName, requestor.itemDescription]
+                )
+            }
         });
     }//store the items a requestor has requested within a trip
 }
