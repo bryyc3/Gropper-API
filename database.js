@@ -22,13 +22,16 @@ export async function getHostedTrips(userNumber){
         FROM Trips
         LEFT JOIN (
             SELECT tripId, requestor, 
-            JSON_ARRAYAGG(
+            CASE 
+            WHEN COUNT(itemName) > 0 THEN JSON_ARRAYAGG(
                 JSON_OBJECT(
                     'itemName', itemName,
                     'itemDescription', itemDescription
                 )
-            ) AS items
-            FROM Requested_Items
+            )
+            ELSE NULL
+        END AS items
+            FROM Requested_Items 
             GROUP BY tripId, requestor
         ) Requested_Items ON Trips.tripId = Requested_Items.tripId
         WHERE Trips.host = ?
@@ -73,12 +76,6 @@ export async function getRequestedTrips(userNumber){
 //and the items that have been requested(by the user) within each trip
 
 
-
-
-export async function createUser(){
-
-}
-
 export async function storeTripInfo(tripData, requestorsSelected){
     await pool.query(
         `INSERT INTO Trips(tripId, location, locationDescription, host, status)
@@ -90,8 +87,7 @@ export async function storeTripInfo(tripData, requestorsSelected){
 function storeRequestorInfo(pickedRequestors, requestors, tripId){
     if(pickedRequestors.length > 0){
         pickedRequestors.forEach(async requestor => {
-            requestor.itemName = "";
-            requestor.itemDescription = "";
+            requestor.itemDescription = "None"
             await pool.query(
                 `INSERT INTO Requested_Items(requestor, tripId, itemName, itemDescription)
                  VALUES(?,?,?,?)`, [requestor.phoneNumber, tripId, requestor.itemName, requestor.itemDescription]
