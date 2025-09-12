@@ -59,6 +59,7 @@ app.post('/trips', verifyAccessToken, async (req, res) => {
     const requestedTrips = await getRequestedTrips(userPhone);
     const allTrips = {hostedTripData: hostedTrips,
                       requestedTripData: requestedTrips};
+                      console.log(allTrips)
     res.json(allTrips);
   }
   catch{

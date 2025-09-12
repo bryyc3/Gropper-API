@@ -12,7 +12,9 @@ const pool = mysql.createPool({
 export async function getHostedTrips(userNumber){
     const [tripsHosted] = await pool.query(
         `
-        SELECT Trips.tripId, Trips.location, Trips.host, Trips.locationDescription, Trips.status,
+        SELECT Trips.tripId, Trips.location, 
+        JSON_OBJECT('phoneNumber', Trips.host,'itemsRequested', NULL) AS host,
+        Trips.locationDescription, Trips.status,
         COALESCE(
             JSON_ARRAYAGG(
                 JSON_OBJECT('phoneNumber', Requested_Items.requestor, 
@@ -46,7 +48,9 @@ export async function getHostedTrips(userNumber){
 
 export async function getRequestedTrips(userNumber){
     const [tripsRequested] = await pool.query(
-        `SELECT DISTINCT Trips.tripId, Trips.host, Trips.location, Trips.locationDescription, Trips.status,
+        `SELECT DISTINCT Trips.tripId, 
+         JSON_OBJECT('phoneNumber', Trips.host,'itemsRequested', NULL) AS host, 
+         Trips.location, Trips.locationDescription, Trips.status,
          JSON_ARRAY(
             JSON_OBJECT(
                     'phoneNumber', Requested_Items.requestor,
@@ -79,7 +83,7 @@ export async function getRequestedTrips(userNumber){
 export async function storeTripInfo(tripData, requestorsSelected){
     await pool.query(
         `INSERT INTO Trips(tripId, location, locationDescription, host, status)
-         VALUES(?, ?, ?, ?, ?)`,[tripData.tripId, tripData.location, tripData.locationDescription, tripData.host, tripData.status]
+         VALUES(?, ?, ?, ?, ?)`,[tripData.tripId, tripData.location, tripData.locationDescription, tripData.host.phoneNumber, tripData.status]
     );
     await storeRequestorInfo(requestorsSelected, tripData.requestors, tripData.tripId)
 }
