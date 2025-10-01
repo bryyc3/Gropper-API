@@ -31,3 +31,10 @@ export function verifyRefreshToken(token){
         return user
     })
 }
+
+export function verifySocketToken(token){
+    return jwt.verify(token, process.env.ACCESS_SECRET, (err, user) =>{
+        if(err) return false
+        return user
+    })
+}

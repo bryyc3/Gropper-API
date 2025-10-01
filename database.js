@@ -83,7 +83,10 @@ export async function getRequestedTrips(userNumber){
 export async function storeTripInfo(tripData, requestorsSelected){
     await pool.query(
         `INSERT INTO Trips(tripId, location, locationDescription, host, status)
-         VALUES(?, ?, ?, ?, ?)`,[tripData.tripId, tripData.location, tripData.locationDescription, tripData.host.phoneNumber, tripData.status]
+         VALUES(?, ?, ?, ?, ?)`,
+         [tripData.tripId, tripData.location, 
+          tripData.locationDescription, tripData.host.phoneNumber, 
+          tripData.status]
     );
     await storeRequestorInfo(requestorsSelected, tripData.requestors, tripData.tripId)
 }
@@ -94,7 +97,9 @@ function storeRequestorInfo(pickedRequestors, requestors, tripId){
             requestor.itemDescription = "None"
             await pool.query(
                 `INSERT INTO Requested_Items(requestor, tripId, itemName, itemDescription)
-                 VALUES(?,?,?,?)`, [requestor.phoneNumber, tripId, requestor.itemName, requestor.itemDescription]
+                 VALUES(?,?,?,?)`, 
+                 [requestor.phoneNumber, tripId, 
+                  requestor.itemName, requestor.itemDescription]
             )
         });
     }//store the requestors that can request for items within a trip
@@ -104,16 +109,49 @@ function storeRequestorInfo(pickedRequestors, requestors, tripId){
                 requestor.itemsRequested.forEach(async item => {
                     await pool.query(
                         `INSERT INTO Requested_Items(itemName, itemDescription, requestor, tripId)
-                        VALUES(?,?,?,?)`, [item.itemName, item.itemDescription, requestor.phoneNumber, tripId]
+                         VALUES(?,?,?,?)`, 
+                         [item.itemName, item.itemDescription, 
+                          requestor.phoneNumber, tripId]
                     )
                 })
             }
             else{
                 await pool.query(
                     `INSERT INTO Requested_Items(requestor, tripId, itemName, itemDescription)
-                    VALUES(?,?,?,?)`, [requestor.phoneNumber, tripId, requestor.itemName, requestor.itemDescription]
+                     VALUES(?,?,?,?)`, 
+                     [requestor.phoneNumber, tripId, requestor.itemName, 
+                      requestor.itemDescription]
                 )
             }
         });
     }//store the items a requestor has requested within a trip
+}
+
+export async function updateItems(tripId, userPhone, itemsRequested){
+    let startIndex = 0
+
+    const [nullItem] = await pool.query(
+        `SELECT * FROM Requested_Items
+         WHERE tripId = ? AND requestor = ? AND itemName IS NULL`,
+         [tripId, userPhone]
+    );
+
+    if(nullItem.length > 1){
+        await pool.query(
+            `UPDATE Requested_Items
+             SET itemName = ?, itemDescription = ? 
+             WHERE tripId = ? AND requestor = ?`,
+             [itemsRequested[startIndex].itemName, itemsRequested[startIndex].itemDescription,
+              tripId, userPhone,]
+        )
+        startIndex += 1
+    }
+
+    for(let i = startIndex; i < itemsRequested.length; i++){
+        await pool.query(
+            `INSERT INTO Requested_Items(requestor, tripId, itemName, itemDescription)
+                VALUES(?,?,?,?)`, 
+            [userPhone, tripId, itemsRequested[i].itemName, itemsRequested[i].itemDescription]
+        )
+    }
 }
