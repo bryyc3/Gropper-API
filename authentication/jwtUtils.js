@@ -33,7 +33,7 @@ export function verifyRefreshToken(token){
 }
 
 export function verifySocketToken(token){
-    return jwt.verify(token, process.env.ACCESS_SECRET, (err, user) =>{
+    return jwt.verify(token, process.env.REFRESH_SECRET, (err, user) =>{
         if(err) return false
         return user
     })

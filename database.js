@@ -94,7 +94,6 @@ export async function storeTripInfo(tripData, requestorsSelected){
 function storeRequestorInfo(pickedRequestors, requestors, tripId){
     if(pickedRequestors.length > 0){
         pickedRequestors.forEach(async requestor => {
-            requestor.itemDescription = "None"
             await pool.query(
                 `INSERT INTO Requested_Items(requestor, tripId, itemName, itemDescription)
                  VALUES(?,?,?,?)`, 

@@ -21,10 +21,24 @@ router.post('/create-trip', async (req, res) =>{
       const tripData = JSON.parse(req.body.tripInfo);
       const selectedRequestors = JSON.parse(req.body.contacts);
       try{
-        await dbService.storeTripInfo(tripData, selectedRequestors)
+        await dbService.storeTripInfo(tripData, selectedRequestors);
+
+        if(selectedRequestors.length > 0){
+          req.io.to(`user_${tripData.host.phoneNumber}`).emit("newHostedTrip", tripData);
+          for(let requestor of selectedRequestors){
+            req.io.to(`user_${requestor.phoneNumber}`).emit("newTrip", tripData);
+            
+          } 
+          console.log("emitted hosted trip")
+        }
+        else{
+          req.io.to(`user_${tripData.requestors[0].phoneNumber}`).emit("newTrip", tripData);
+          req.io.to(`user_${tripData.host.phoneNumber}`).emit("newRequest", tripData);
+        }
         res.send(true)
-      } catch {
-        console.log("fail")
+        
+      } catch (err) {
+        console.log(err)
         res.send(false)
       }
        
@@ -32,11 +46,13 @@ router.post('/create-trip', async (req, res) =>{
   
 router.post('/update-items', async (req, res) =>{
     const trip = JSON.parse(req.body.tripId);
-    const user = JSON.parse(req.body.user);
+    const host = JSON.parse(req.body.host);
+    const requestorPhone = JSON.parse(req.body.user);
     const items = JSON.parse(req.body.items);
   
     try{
-      await dbService.updateItems(trip, user, items);
+      await dbService.updateItems(trip, requestorPhone, items);
+      req.io.to(`user_${host}`).emit("itemsAdded", {trip, requestorPhone, items});
       res.send(true);
     } catch {
       res.send(false);

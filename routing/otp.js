@@ -36,7 +36,7 @@ router.post('/simulate-otp', async (req, res) =>{
     res.status(200).send(true)
   })
   
-  router.post('/simulate-otp-verification', async (req, res) =>{
+router.post('/simulate-otp-verification', async (req, res) =>{
     const userPhone = req.body.phoneNumber
     const enteredCode = req.body.userCode
     const secretCode = '"test"'
