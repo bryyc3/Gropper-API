@@ -24,14 +24,17 @@ export async function getHostedTrips(userNumber){
         FROM Trips
         LEFT JOIN (
             SELECT tripId, requestor, 
-            CASE 
-            WHEN COUNT(itemName) > 0 THEN JSON_ARRAYAGG(
-                JSON_OBJECT(
-                    'itemName', itemName,
-                    'itemDescription', itemDescription
-                )
-            )
-            ELSE NULL
+            CASE
+                WHEN SUM(CASE WHEN itemName = ' ' THEN 1 ELSE 0 END) > 0 THEN NULL
+                ELSE COALESCE(
+                    JSON_ARRAYAGG(
+                        JSON_OBJECT(
+                            'itemName', itemName,
+                            'itemDescription', itemDescription
+                        )
+                    ),
+                    JSON_ARRAY()
+        )
         END AS items
             FROM Requested_Items 
             GROUP BY tripId, requestor
@@ -55,15 +58,19 @@ export async function getRequestedTrips(userNumber){
             JSON_OBJECT(
                     'phoneNumber', Requested_Items.requestor,
                     'itemsRequested',
-                    COALESCE(
-                        JSON_ARRAYAGG(
-                            JSON_OBJECT(
-                                'itemName', Requested_Items.itemName, 
-                                'itemDescription', Requested_Items.itemDescription
-                            )
-                        ),
-                        JSON_ARRAY()
-                    )
+                    CASE
+                        WHEN SUM(CASE WHEN Requested_Items.itemName = ' ' THEN 1 ELSE 0 END) > 0
+                            THEN NULL
+                        ELSE COALESCE(
+                            JSON_ARRAYAGG(
+                                JSON_OBJECT(
+                                    'itemName', Requested_Items.itemName, 
+                                    'itemDescription', Requested_Items.itemDescription
+                                )
+                            ),
+                            JSON_ARRAY()
+                        )
+                    END
                 ) 
          ) AS requestors    
          FROM Requested_Items

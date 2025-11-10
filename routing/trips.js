@@ -12,7 +12,8 @@ router.post('/trips', async (req, res) =>{
                         requestedTripData: requestedTrips};
       res.json(allTrips);
     }
-    catch{
+    catch (err) {
+      console.log(err)
       res.sendStatus(500)
     }
 })//all trips user is hosting or can make requests for 
