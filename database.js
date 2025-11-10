@@ -94,6 +94,8 @@ export async function storeTripInfo(tripData, requestorsSelected){
 function storeRequestorInfo(pickedRequestors, requestors, tripId){
     if(pickedRequestors.length > 0){
         pickedRequestors.forEach(async requestor => {
+            requestor.itemName = " ";
+            requestor.itemDescription = " ";
             await pool.query(
                 `INSERT INTO Requested_Items(requestor, tripId, itemName, itemDescription)
                  VALUES(?,?,?,?)`, 
@@ -131,15 +133,15 @@ export async function updateItems(tripId, userPhone, itemsRequested){
 
     const [nullItem] = await pool.query(
         `SELECT * FROM Requested_Items
-         WHERE tripId = ? AND requestor = ? AND itemName IS NULL`,
+         WHERE tripId = ? AND requestor = ? AND itemName = ' '`,
          [tripId, userPhone]
     );
 
-    if(nullItem.length > 1){
+    if(nullItem.length > 0){
         await pool.query(
             `UPDATE Requested_Items
              SET itemName = ?, itemDescription = ? 
-             WHERE tripId = ? AND requestor = ?`,
+             WHERE tripId = ? AND requestor = ? AND itemName = ' '`,
              [itemsRequested[startIndex].itemName, itemsRequested[startIndex].itemDescription,
               tripId, userPhone,]
         )

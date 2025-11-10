@@ -15,7 +15,7 @@ dotenv.config();
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
-const port = process.env.PROD_PORT;
+const port = process.env.LOCAL_PORT;
 app.use(express.json());
 
 

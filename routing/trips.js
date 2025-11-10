@@ -49,12 +49,13 @@ router.post('/update-items', async (req, res) =>{
     const host = JSON.parse(req.body.host);
     const requestorPhone = JSON.parse(req.body.user);
     const items = JSON.parse(req.body.items);
-  
+
     try{
       await dbService.updateItems(trip, requestorPhone, items);
       req.io.to(`user_${host}`).emit("itemsAdded", {trip, requestorPhone, items});
       res.send(true);
-    } catch {
+    } catch (err) {
+      console.log(err)
       res.send(false);
     }
 })

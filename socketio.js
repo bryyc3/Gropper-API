@@ -4,7 +4,6 @@ import { getHostedTrips, getRequestedTrips } from "./database.js";
 
 export default async function socketHandler(io, socket){
     const token = socket.handshake.headers["authorization"].split(" ")[1];
-    console.log("running socket handler")
     if(!token){
       socket.disconnect();
       console.log("disconnecting")
@@ -33,6 +32,7 @@ export default async function socketHandler(io, socket){
         socket.join(`trip_${tripId}`);
         console.log(`Joined ${tripId}`)
       });
+
     } catch(err){
       socket.disconnect()
       console.log(err)

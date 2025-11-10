@@ -24,9 +24,11 @@ router.post('/verify-otp', async (req, res) =>{
       const refresh = jwtService.generateRefreshToken(userPhoneNumber);
       const access = jwtService.generateAccessToken(userPhoneNumber);
       const tokens = {refreshToken: refresh, accessToken: access}
+      console.log("success verification");
       res.json(tokens);
     }
     else{
+      console.log("failed verification");
       res.status(400)
     }
 })//verify otp sent to user via sms
@@ -44,9 +46,11 @@ router.post('/simulate-otp-verification', async (req, res) =>{
         const refresh = jwtService.generateRefreshToken(userPhone);
         const access = jwtService.generateAccessToken(userPhone);
         const tokens = {refreshToken: refresh, accessToken: access}
+        console.log(refresh)
         res.json(tokens);
     }
     else{
+      console.log("failed verify")
       res.status(400).send("invalid")
     }
 })
