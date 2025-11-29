@@ -12,7 +12,7 @@ router.post('/trips', async (req, res) =>{
                         requestedTripData: requestedTrips};
       res.json(allTrips);
     }
-    catch (err) {
+    catch (err){
       console.log(err)
       res.sendStatus(500)
     }
@@ -23,22 +23,22 @@ router.post('/create-trip', async (req, res) =>{
       const selectedRequestors = JSON.parse(req.body.contacts);
       try{
         await dbService.storeTripInfo(tripData, selectedRequestors);
+        const newTrip = await dbService.getUpdatedTrip(tripData.tripId);
 
         if(selectedRequestors.length > 0){
-          req.io.to(`user_${tripData.host.phoneNumber}`).emit("newHostedTrip", tripData);
+          req.io.to(`user_${tripData.host.phoneNumber}`).emit("newHostedTrip", newTrip);
           for(let requestor of selectedRequestors){
-            req.io.to(`user_${requestor.phoneNumber}`).emit("newTrip", tripData);
+            req.io.to(`user_${requestor.phoneNumber}`).emit("newTrip", newTrip);
             
           } 
-          console.log("emitted hosted trip")
         }
         else{
-          req.io.to(`user_${tripData.requestors[0].phoneNumber}`).emit("newTrip", tripData);
-          req.io.to(`user_${tripData.host.phoneNumber}`).emit("newRequest", tripData);
+          req.io.to(`user_${tripData.requestors[0].phoneNumber}`).emit("newTrip", newTrip);
+          req.io.to(`user_${tripData.host.phoneNumber}`).emit("newRequest", newTrip);
         }
         res.send(true)
         
-      } catch (err) {
+      } catch (err){
         console.log(err)
         res.send(false)
       }
@@ -53,12 +53,42 @@ router.post('/update-items', async (req, res) =>{
 
     try{
       await dbService.updateItems(trip, requestorPhone, items);
-      req.io.to(`user_${host}`).emit("itemsAdded", {trip, requestorPhone, items});
+      const tripUpdated = await dbService.getUpdatedTrip(trip);
+
+      req.io.to(`user_${host}`).emit("itemsAdded", tripUpdated);
       res.send(true);
-    } catch (err) {
+    } catch (err){
       console.log(err)
       res.send(false);
     }
+})
+
+router.post('/accept-trip', async (req, res) =>{
+  const trip = JSON.parse(req.body.tripId);
+
+  try{
+    await dbService.acceptTrip(trip);
+    console.log(trip)
+    const newTripData = await dbService.getUpdatedTrip(trip);
+    req.io.to(`trip_${trip}`).emit("tripAccepted", newTripData);
+    res.send(true);
+  } catch (err){
+    console.log(err);
+    res.send(false);
+  }
+})
+
+router.delete('/delete-trip', async (req, res) =>{
+  const trip = JSON.parse(req.body.tripId);
+
+  try{
+    await dbService.deleteTrip(trip);
+    req.io.to(`trip_${trip}`).emit("tripDeleted", {"tripId": trip});
+    res.send(true);
+  } catch (err){
+    console.log(err);
+    res.send(false);
+  }
 })
 
 export default router;

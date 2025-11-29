@@ -86,6 +86,41 @@ export async function getRequestedTrips(userNumber){
 }//search for the trips a user can make requests to
 //and the items that have been requested(by the user) within each trip
 
+export async function getUpdatedTrip(tripId){
+    const [updatedTrip] = await pool.query(
+        `
+        SELECT Trips.tripId, Trips.location, 
+        JSON_OBJECT('phoneNumber', Trips.host,'itemsRequested', NULL) AS host,
+        Trips.locationDescription, Trips.status,
+        COALESCE(
+            JSON_ARRAYAGG(
+                JSON_OBJECT('phoneNumber', Requested_Items.requestor, 
+                            'itemsRequested', Requested_Items.items)
+            ), JSON_ARRAY()
+        ) AS requestors
+        FROM Trips
+        LEFT JOIN (
+            SELECT tripId, requestor, 
+            CASE
+                WHEN SUM(CASE WHEN itemName = ' ' THEN 1 ELSE 0 END) > 0 THEN NULL
+                ELSE COALESCE(
+                    JSON_ARRAYAGG(
+                        JSON_OBJECT(
+                            'itemName', itemName,
+                            'itemDescription', itemDescription
+                        )
+                    ),
+                    JSON_ARRAY()
+        )
+        END AS items
+            FROM Requested_Items 
+            GROUP BY tripId, requestor
+        ) Requested_Items ON Trips.tripId = Requested_Items.tripId
+        WHERE Trips.tripId = ?
+        GROUP BY Trips.tripId`,tripId
+    );
+    return updatedTrip[0]
+}
 
 export async function storeTripInfo(tripData, requestorsSelected){
     await pool.query(
@@ -162,4 +197,26 @@ export async function updateItems(tripId, userPhone, itemsRequested){
             [userPhone, tripId, itemsRequested[i].itemName, itemsRequested[i].itemDescription]
         )
     }
+}
+
+export async function acceptTrip(tripId){
+    await pool.query(
+        `UPDATE Trips
+             SET status = ?
+             WHERE tripId = ?`,
+             [1, tripId]
+    )
+}
+
+export async function deleteTrip(tripId){
+    await pool.query(
+        `DELETE from Requested_Items
+             WHERE tripId = ?`,
+             tripId
+    )
+    await pool.query(
+        `DELETE from Trips
+             WHERE tripId = ?`,
+             tripId
+    )
 }
