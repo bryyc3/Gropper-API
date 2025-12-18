@@ -133,13 +133,13 @@ export async function storeTripInfo(tripData, requestorsSelected){
     await storeRequestorInfo(requestorsSelected, tripData.requestors, tripData.tripId)
 }
 
-function storeRequestorInfo(pickedRequestors, requestors, tripId){
+export async function storeRequestorInfo(pickedRequestors, requestors, tripId){
     if(pickedRequestors.length > 0){
         pickedRequestors.forEach(async requestor => {
             requestor.itemName = " ";
             requestor.itemDescription = " ";
             await pool.query(
-                `INSERT INTO Requested_Items(requestor, tripId, itemName, itemDescription)
+                `INSERT IGNORE INTO Requested_Items(requestor, tripId, itemName, itemDescription)
                  VALUES(?,?,?,?)`, 
                  [requestor.phoneNumber, tripId, 
                   requestor.itemName, requestor.itemDescription]
@@ -197,6 +197,18 @@ export async function updateItems(tripId, userPhone, itemsRequested){
             [userPhone, tripId, itemsRequested[i].itemName, itemsRequested[i].itemDescription]
         )
     }
+}
+
+export async function deleteItem(tripId, userPhone, itemName){
+    const deletedItemName = " ";
+    const deletedItemDesc = " ";
+
+    await pool.query(
+        `UPDATE Requested_Items
+             SET itemName = ?, itemDescription = ? 
+             WHERE tripId = ? AND requestor = ? AND itemName = ?`,
+             [deletedItemName, deletedItemDesc, tripId, userPhone, itemName]
+    )
 }
 
 export async function acceptTrip(tripId){
