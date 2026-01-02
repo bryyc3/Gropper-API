@@ -220,6 +220,14 @@ export async function acceptTrip(tripId){
     )
 }
 
+export async function removeRequestor(requestorInfo, tripId){
+    await pool.query(
+        `DELETE from Requested_Items
+             WHERE requestor = ? AND tripId = ?`,
+             [requestorInfo, tripId]
+    )
+}
+
 export async function deleteTrip(tripId){
     await pool.query(
         `DELETE from Requested_Items

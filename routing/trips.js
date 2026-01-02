@@ -1,4 +1,4 @@
-import { Router } from 'express'
+import { request, Router } from 'express'
 import * as dbService from  '../database.js';
 
 const router = Router();
@@ -72,6 +72,7 @@ router.post('/add-requestors', async (req, res) =>{
     const tripUpdated = await dbService.getUpdatedTrip(trip);
 
     for(let requestor of selectedRequestors){
+      console.log(requestor.phoneNumber)
       req.io.to(`user_${requestor.phoneNumber}`).emit("newTrip", tripUpdated);
     } 
     res.send(true);
@@ -107,6 +108,21 @@ router.delete('/delete-item', async (req, res) =>{
     console.log(tripUpdated.host.phoneNumber)
     req.io.to(`user_${tripUpdated.host.phoneNumber}`).emit("itemDeleted", tripUpdated);
     res.send(tripUpdated);
+  } catch (err){
+    console.log(err);
+    res.send(false);
+  }
+})
+
+router.delete('/remove-requestor', async (req, res) =>{
+  const requestor = JSON.parse(req.body.requestor)
+  const trip = JSON.parse(req.body.tripId);
+
+  try{
+    await dbService.removeRequestor(requestor, trip);
+    console.log(requestor)
+    req.io.to(`user_${requestor}`).emit("tripDeleted", {"tripId": trip});
+    res.send(true);
   } catch (err){
     console.log(err);
     res.send(false);
