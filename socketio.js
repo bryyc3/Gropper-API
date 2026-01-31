@@ -12,16 +12,21 @@ export default async function socketHandler(io, socket){
     try{
       const payload = verifySocketToken(token);
       const user = JSON.parse(payload.phoneNumber);
-      socket.join(`user_${user}`)
-      console.log(`Room ${user} joined`)
 
-      const hostedTrips = await getHostedTrips(user);
+      if(!user){
+        socket.disconnect();
+        return;
+      } else {
+        socket.join(`user_${user}`)
+        console.log(`Room ${user} joined`)
+      }
       
       await getHostedTrips(user).then(trips => {
         if(trips !== null){
           trips.forEach(trip => socket.join(`trip_${trip.id}`))
         };
       });
+
       await getRequestedTrips(user).then(trips => {
         if(trips !== null){
           trips.forEach(trip => socket.join(`trip_${trip.id}`));
@@ -32,6 +37,11 @@ export default async function socketHandler(io, socket){
         socket.join(`trip_${tripId}`);
         console.log(`Joined ${tripId}`)
       });
+
+      socket.on("deleteTrip", (tripId) => {
+        socket.removeAllListeners();
+        console.log(`left trip ${tripId}`)
+      })
 
     } catch(err){
       socket.disconnect()

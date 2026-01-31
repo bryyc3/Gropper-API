@@ -1,5 +1,6 @@
 import { request, Router } from 'express'
 import * as dbService from  '../database.js';
+import * as pushNotification from '../pushNotification.js';
 
 const router = Router();
 
@@ -24,17 +25,21 @@ router.post('/create-trip', async (req, res) =>{
       try{
         await dbService.storeTripInfo(tripData, selectedRequestors);
         const newTrip = await dbService.getUpdatedTrip(tripData.tripId);
-
+        console.log(newTrip.requestors)
+        
         if(selectedRequestors.length > 0){
           req.io.to(`user_${tripData.host.phoneNumber}`).emit("newHostedTrip", newTrip);
           for(let requestor of selectedRequestors){
             req.io.to(`user_${requestor.phoneNumber}`).emit("newTrip", newTrip);
-            
+            const notificationToken = await dbService.getUserNotificationToken(requestor.phoneNumber);
+            pushNotification.sendPush(notificationToken, "New Trip Created", "You have been added to a new trip")
           } 
         }
         else{
           req.io.to(`user_${tripData.requestors[0].phoneNumber}`).emit("newTrip", newTrip);
           req.io.to(`user_${tripData.host.phoneNumber}`).emit("newRequest", newTrip);
+          const notificationToken = await dbService.getUserNotificationToken(tripData.host.phoneNumber);
+          pushNotification.sendPush(notificationToken, "New Trip Request", `Someone is requesting a trip to ${tripData.location}`);
         }
         res.send(true)
         

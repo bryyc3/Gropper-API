@@ -87,6 +87,7 @@ export async function getRequestedTrips(userNumber){
 //and the items that have been requested(by the user) within each trip
 
 export async function getUpdatedTrip(tripId){
+    console.log("getting updated trip")
     const [updatedTrip] = await pool.query(
         `
         SELECT Trips.tripId, Trips.location, 
@@ -134,29 +135,31 @@ export async function storeTripInfo(tripData, requestorsSelected){
 }
 
 export async function storeRequestorInfo(pickedRequestors, requestors, tripId){
+    console.log("storing requestors")
     if(pickedRequestors.length > 0){
-        pickedRequestors.forEach(async requestor => {
+        for(const requestor of pickedRequestors){
             requestor.itemName = " ";
             requestor.itemDescription = " ";
+
             await pool.query(
                 `INSERT IGNORE INTO Requested_Items(requestor, tripId, itemName, itemDescription)
                  VALUES(?,?,?,?)`, 
                  [requestor.phoneNumber, tripId, 
                   requestor.itemName, requestor.itemDescription]
             )
-        });
+        };
     }//store the requestors that can request for items within a trip
     else{
         requestors.forEach(async requestor => {
             if(requestor.itemsRequested.length > 0){
-                requestor.itemsRequested.forEach(async item => {
+                for(const item of requestor.itemsRequested){
                     await pool.query(
                         `INSERT INTO Requested_Items(itemName, itemDescription, requestor, tripId)
                          VALUES(?,?,?,?)`, 
                          [item.itemName, item.itemDescription, 
                           requestor.phoneNumber, tripId]
                     )
-                })
+                }
             }
             else{
                 await pool.query(
@@ -239,4 +242,40 @@ export async function deleteTrip(tripId){
              WHERE tripId = ?`,
              tripId
     )
+}
+
+export async function storeUser(userPhone){
+    await pool.query(
+        `INSERT INTO users(phoneNumber)
+         VALUES(?)`, userPhone
+    )
+}
+
+export async function storeUserNotificationToken(user, token){
+    await pool.query(
+        `INSERT INTO notification_tokens(token, user)
+         VALUES(?,?)
+         ON DUPLICATE KEY UPDATE
+         user = VALUES(user),
+         last_updated = NOW();`, [token, user]
+    )
+}
+export async function getUser(phone){
+    const [user] = await pool.query(
+        `SELECT phoneNumber FROM users
+         WHERE phoneNumber = ?`, phone
+    )
+    if(user.length == 0){
+        return true;
+    } else {
+        return false;
+    }
+}
+
+export async function getUserNotificationToken(user){
+    const [userTokens] = await pool.query(
+        `SELECT token FROM notification_tokens
+         WHERE user = ?`, user
+    )
+    return userTokens
 }

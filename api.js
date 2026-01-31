@@ -6,6 +6,7 @@ import * as jwtService from './authentication/jwtUtils.js'
 
 import otpRoutes from './routing/otp.js';
 import { verifyAccessToken } from './authentication/jwtUtils.js';
+import { storeUser, storeUserNotificationToken, getUser } from './database.js';
 import tripRoutes from'./routing/trips.js';
 
 import socketHandler from './socketio.js';
@@ -32,17 +33,37 @@ app.post('/verify-refresh', async (req, res) =>{
 app.use("/", otpRoutes);
 
 app.use(verifyAccessToken);//requires access token to be verified before using trip routes
+
 app.use((req, res, next) => {
   req.io = io;
   next();
 })
 
+app.post('/allow-notifications', async (req, res) =>{
+  const phoneNumber = JSON.parse(req.body.userNumber);
+  const notiToken = JSON.parse(req.body.userToken);
+
+  try{
+    const notAlreadyUser = await getUser(phoneNumber);
+
+    if(notAlreadyUser){
+      await storeUser(phoneNumber);
+    }
+
+    await storeUserNotificationToken(phoneNumber, notiToken);
+  } catch (err){
+    console.log(err);
+    res.send(false);
+  }
+})//store notification token associated with a user when they allow notifications
+
 app.use("/", tripRoutes);
 
 io.on('connection', (socket) =>{
   console.log("connected")
+  console.log(socket.rooms)
     socketHandler(io, socket);
-})
+})//connect to socketIO
 
 
 
