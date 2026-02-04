@@ -60,9 +60,7 @@ app.post('/allow-notifications', async (req, res) =>{
 app.use("/", tripRoutes);
 
 io.on('connection', (socket) =>{
-  console.log("connected")
-  console.log(socket.rooms)
-    socketHandler(io, socket);
+  socketHandler(io, socket);
 })//connect to socketIO
 
 

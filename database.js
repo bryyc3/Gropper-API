@@ -87,7 +87,6 @@ export async function getRequestedTrips(userNumber){
 //and the items that have been requested(by the user) within each trip
 
 export async function getUpdatedTrip(tripId){
-    console.log("getting updated trip")
     const [updatedTrip] = await pool.query(
         `
         SELECT Trips.tripId, Trips.location, 
@@ -135,7 +134,6 @@ export async function storeTripInfo(tripData, requestorsSelected){
 }
 
 export async function storeRequestorInfo(pickedRequestors, requestors, tripId){
-    console.log("storing requestors")
     if(pickedRequestors.length > 0){
         for(const requestor of pickedRequestors){
             requestor.itemName = " ";
@@ -150,7 +148,7 @@ export async function storeRequestorInfo(pickedRequestors, requestors, tripId){
         };
     }//store the requestors that can request for items within a trip
     else{
-        requestors.forEach(async requestor => {
+        for(const requestor of requestors){
             if(requestor.itemsRequested.length > 0){
                 for(const item of requestor.itemsRequested){
                     await pool.query(
@@ -169,7 +167,7 @@ export async function storeRequestorInfo(pickedRequestors, requestors, tripId){
                       requestor.itemDescription]
                 )
             }
-        });
+        };
     }//store the items a requestor has requested within a trip
 }
 

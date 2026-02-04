@@ -18,7 +18,6 @@ export default async function socketHandler(io, socket){
         return;
       } else {
         socket.join(`user_${user}`)
-        console.log(`Room ${user} joined`)
       }
       
       await getHostedTrips(user).then(trips => {
@@ -35,12 +34,10 @@ export default async function socketHandler(io, socket){
 
       socket.on("joinTrip", (tripId) => {
         socket.join(`trip_${tripId}`);
-        console.log(`Joined ${tripId}`)
       });
 
       socket.on("deleteTrip", (tripId) => {
         socket.removeAllListeners();
-        console.log(`left trip ${tripId}`)
       })
 
     } catch(err){

@@ -24,7 +24,6 @@ router.post('/verify-otp', async (req, res) =>{
       const refresh = jwtService.generateRefreshToken(userPhoneNumber);
       const access = jwtService.generateAccessToken(userPhoneNumber);
       const tokens = {refreshToken: refresh, accessToken: access}
-      console.log("success verification");
       res.json(tokens);
     }
     else{
