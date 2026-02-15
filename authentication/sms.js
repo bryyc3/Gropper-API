@@ -15,7 +15,6 @@ export async function sendOtp(phoneNumber){
             channel: "sms",
             to: phoneNumber
         });
-        console.log(otpCreation)
     return otpCreation.status;
 }
 

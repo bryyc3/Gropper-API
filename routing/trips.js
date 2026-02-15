@@ -76,7 +76,6 @@ router.post('/add-requestors', async (req, res) =>{
     const tripUpdated = await dbService.getUpdatedTrip(trip);
 
     for(let requestor of selectedRequestors){
-      console.log(requestor.phoneNumber)
       req.io.to(`user_${requestor.phoneNumber}`).emit("newTrip", tripUpdated);
     } 
     res.send(true);
@@ -104,9 +103,10 @@ router.delete('/delete-item', async (req, res) =>{
   const tripId = JSON.parse(req.body.tripId);
   const userPhone = JSON.parse(req.body.user);
   const itemName = JSON.parse(req.body.item);
+  const count = JSON.parse(req.body.itemsCount);
 
   try{
-    await dbService.deleteItem(tripId, userPhone, itemName);
+    await dbService.deleteItem(tripId, userPhone, itemName, count);
     const tripUpdated = await dbService.getUpdatedTrip(tripId);
     req.io.to(`user_${tripUpdated.host.phoneNumber}`).emit("itemDeleted", tripUpdated);
     res.send(tripUpdated);

@@ -200,16 +200,23 @@ export async function updateItems(tripId, userPhone, itemsRequested){
     }
 }
 
-export async function deleteItem(tripId, userPhone, itemName){
+export async function deleteItem(tripId, userPhone, itemName, itemsLength){
     const deletedItemName = " ";
     const deletedItemDesc = " ";
-
-    await pool.query(
-        `UPDATE Requested_Items
-             SET itemName = ?, itemDescription = ? 
-             WHERE tripId = ? AND requestor = ? AND itemName = ?`,
-             [deletedItemName, deletedItemDesc, tripId, userPhone, itemName]
-    )
+    if(itemsLength == 1){
+        await pool.query(
+            `UPDATE Requested_Items
+                 SET itemName = ?, itemDescription = ? 
+                 WHERE tripId = ? AND requestor = ? AND itemName = ?`,
+                 [deletedItemName, deletedItemDesc, tripId, userPhone, itemName]
+        )
+    } else {
+        await pool.query(
+            `DELETE from Requested_Items
+            WHERE tripId = ? AND requestor = ? AND itemName = ?`,
+            [tripId, userPhone, itemName]
+        )
+    }   
 }
 
 export async function acceptTrip(tripId){
