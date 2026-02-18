@@ -5,12 +5,12 @@ import * as jwtService from '../authentication/jwtUtils.js';
 const router = Router();
 
 router.post('/generate-otp', async (req, res) =>{
-    const userPhoneNumber = req.body;
+    const userPhoneNumber = req.body.phoneNumber;
   
     const otpSent = await otpService.sendOtp(userPhoneNumber);
     
     if(otpSent === "pending"){
-      res.status(200);
+      res.status(200).send(true)
     }
 })//send user otp for authorization 
   
