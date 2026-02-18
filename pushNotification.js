@@ -1,16 +1,15 @@
 import apn from 'apn';
 import dotenv from 'dotenv';
-import fs from 'fs';
 
 dotenv.config();
 
 const apnProvider = new apn.Provider({
   token: {
-    key: fs.readFileSync(process.env.APNS_KEY_PATH),
+    key: Buffer.from(process.env.APNS_KEY, 'base64'),
     keyId: process.env.APNS_KEY_ID,
     teamId: process.env.APPLE_TEAM_ID
   },
-  production: false 
+  production: true 
 });
 
 export async function sendPush(deviceTokens, notiTitle, notiBody) {
