@@ -25,6 +25,7 @@ export async function verifyOtp(phoneNumber, otp){
             code: otp,
             to: phoneNumber
         });
+        console.log(otp)
     return otpCheck.status;
 }
 

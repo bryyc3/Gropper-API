@@ -5,7 +5,7 @@ import * as pushNotification from '../pushNotification.js';
 const router = Router();
 
 router.post('/trips', async (req, res) =>{
-    const userPhone = req.body.user
+    const userPhone = JSON.parse(req.body.user)
     try{
       const hostedTrips = await dbService.getHostedTrips(userPhone);
       const requestedTrips = await dbService.getRequestedTrips(userPhone);
@@ -50,8 +50,8 @@ router.post('/create-trip', async (req, res) =>{
 })//stores trip information that was either requested or created by the host
   
 router.post('/update-items', async (req, res) =>{
-    const trip = req.body.tripId;
-    const host = req.body.host;
+    const trip = JSON.parse(req.body.tripId);
+    const host = JSON.parse(req.body.host);
     const requestorPhone = JSON.parse(req.body.user);
     const items = JSON.parse(req.body.items);
 
@@ -68,7 +68,7 @@ router.post('/update-items', async (req, res) =>{
 })
 
 router.post('/add-requestors', async (req, res) =>{
-  const trip = req.body.tripId;
+  const trip = JSON.parse(req.body.tripId);
   const selectedRequestors = JSON.parse(req.body.contacts);
 
   try{
@@ -86,7 +86,7 @@ router.post('/add-requestors', async (req, res) =>{
 })
 
 router.post('/accept-trip', async (req, res) =>{
-  const tripId = req.body.tripId;
+  const tripId = JSON.parse(req.body.tripId);
 
   try{
     await dbService.acceptTrip(tripId);
@@ -100,10 +100,10 @@ router.post('/accept-trip', async (req, res) =>{
 })
 
 router.delete('/delete-item', async (req, res) =>{
-  const tripId = req.body.tripId;
-  const userPhone = req.body.user;
-  const itemName = req.body.item;
-  const count = req.body.itemsCount;
+  const tripId = JSON.parse(req.body.tripId);
+  const userPhone = JSON.parse(req.body.user);
+  const itemName = JSON.parse(req.body.item);
+  const count = JSON.parse(req.body.itemsCount);
 
   try{
     await dbService.deleteItem(tripId, userPhone, itemName, count);
@@ -117,8 +117,8 @@ router.delete('/delete-item', async (req, res) =>{
 })
 
 router.delete('/remove-requestor', async (req, res) =>{
-  const requestor = req.body.requestor;
-  const trip = req.body.tripId;
+  const requestor = JSON.parse(req.body.requestor)
+  const trip = JSON.parse(req.body.tripId);
 
   try{
     await dbService.removeRequestor(requestor, trip);
@@ -131,7 +131,7 @@ router.delete('/remove-requestor', async (req, res) =>{
 })
 
 router.delete('/delete-trip', async (req, res) =>{
-  const trip = req.body.tripId;
+  const trip = JSON.parse(req.body.tripId);
 
   try{
     await dbService.deleteTrip(trip);

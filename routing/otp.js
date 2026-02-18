@@ -16,7 +16,7 @@ router.post('/generate-otp', async (req, res) =>{
   
 router.post('/verify-otp', async (req, res) =>{
     const userPhoneNumber = req.body.phoneNumber;
-    const enteredOtp = req.body.userCode;
+    const enteredOtp = JSON.parse(req.body.userCode);
      
     const otpVerified = await otpService.verifyOtp(userPhoneNumber, enteredOtp)
   
