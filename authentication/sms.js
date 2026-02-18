@@ -9,6 +9,7 @@ const serviceSid = process.env.TWILIO_SERVICE_SID;
 const client = twilio(accountSid, authToken);
 
 export async function sendOtp(phoneNumber){
+    console.log(phoneNumber)
     const otpCreation = await client.verify.v2.
         services(serviceSid)
         .verifications.create({
@@ -27,3 +28,4 @@ export async function verifyOtp(phoneNumber, otp){
         });
     return otpCheck.status;
 }
+
