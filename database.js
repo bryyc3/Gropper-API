@@ -284,3 +284,12 @@ export async function getUserNotificationToken(user){
     )
     return userTokens
 }
+
+export async function revokeUserNotificationToken(user, token){
+    const [userTokens] = await pool.query(
+        `DELETE FROM notification_tokens 
+         WHERE user = ? AND token = ?`,
+        [user, token]
+    )
+    return userTokens
+}

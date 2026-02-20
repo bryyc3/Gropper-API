@@ -30,15 +30,19 @@ router.post('/create-trip', async (req, res) =>{
           req.io.to(`user_${tripData.host.phoneNumber}`).emit("newHostedTrip", newTrip);
           for(let requestor of selectedRequestors){
             req.io.to(`user_${requestor.phoneNumber}`).emit("newTrip", newTrip);
-            const notificationToken = await dbService.getUserNotificationToken(requestor.phoneNumber);
-            pushNotification.sendPush(notificationToken, "New Trip Created", "You have been added to a new trip")
+            const notificationTokens = await dbService.getUserNotificationToken(requestor.phoneNumber);
+            for(let token of notificationTokens) {
+              pushNotification.sendPush(token, "New Trip Created", "You have been added to a new trip")
+            }
           } 
         }
         else{
           req.io.to(`user_${tripData.requestors[0].phoneNumber}`).emit("newTrip", newTrip);
           req.io.to(`user_${tripData.host.phoneNumber}`).emit("newRequest", newTrip);
-          const notificationToken = await dbService.getUserNotificationToken(tripData.host.phoneNumber);
-          pushNotification.sendPush(notificationToken, "New Trip Request", `Someone is requesting a trip to ${tripData.location}`);
+          const notificationTokens = await dbService.getUserNotificationToken(tripData.host.phoneNumber);
+          for(let token of notificationTokens) {
+            pushNotification.sendPush(token, "New Trip Request", `Someone is requesting a trip to ${tripData.location}`);
+          }
         }
         res.send(true)
         
