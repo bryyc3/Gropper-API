@@ -6,7 +6,7 @@ import * as jwtService from './authentication/jwtUtils.js'
 
 import otpRoutes from './routing/otp.js';
 import { verifyAccessToken } from './authentication/jwtUtils.js';
-import { storeUser, storeUserNotificationToken, getUser, revokeUserNotificationToken } from './database.js';
+import { storeUser, storeUserNotificationToken, getUser, revokeUserNotificationToken} from './database.js';
 import tripRoutes from'./routing/trips.js';
 
 import socketHandler from './socketio.js';
