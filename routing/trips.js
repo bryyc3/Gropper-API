@@ -38,7 +38,7 @@ router.post('/create-trip', async (req, res) =>{
           req.io.to(`user_${tripData.requestors[0].phoneNumber}`).emit("newTrip", newTrip);
           req.io.to(`user_${tripData.host.phoneNumber}`).emit("newRequest", newTrip);
           const notificationToken = await dbService.getUserNotificationToken(tripData.host.phoneNumber);
-          pushNotification.sendPush(notificationToken, "New Trip Request", `Someone is requesting a trip to ${tripData.location}`);
+          pushNotification.sendPush(notificationToken, "New Trip Request", `You have a new request - Trip to ${tripData.location}`);
         }
         res.send(true)
         

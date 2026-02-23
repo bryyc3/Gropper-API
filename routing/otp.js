@@ -18,16 +18,19 @@ router.post('/verify-otp', async (req, res) =>{
     const userPhoneNumber = req.body.phoneNumber;
     const enteredOtp = JSON.parse(req.body.userCode);
      
-    const otpVerified = await otpService.verifyOtp(userPhoneNumber, enteredOtp)
+    const otpVerified =  await otpService.verifyOtp(userPhoneNumber, enteredOtp)
   
     if(otpVerified === "approved"){
       const refresh = jwtService.generateRefreshToken(userPhoneNumber);
       const access = jwtService.generateAccessToken(userPhoneNumber);
-      const tokens = {refreshToken: refresh, accessToken: access}
+      const tokens = {refreshToken: refresh, accessToken: access};
       res.json(tokens);
     }
-    else{
-      console.log("failed verification");
+    if(otpVerified === "pending"){
+      const refresh = jwtService.generateRefreshToken(userPhoneNumber);
+      const access = jwtService.generateAccessToken(userPhoneNumber);
+      const tokens = {refreshToken: refresh, accessToken: access};
+      console.log("Incorrect password");
       res.status(400)
     }
 })//verify otp sent to user via sms

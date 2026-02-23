@@ -42,7 +42,6 @@ app.use((req, res, next) => {
 app.post('/allow-notifications', async (req, res) =>{
   const phoneNumber = JSON.parse(req.body.userNumber);
   const notiToken = JSON.parse(req.body.userToken);
-  console.log(phoneNumber, notiToken)
 
   try{
     const notAlreadyUser = await getUser(phoneNumber);
@@ -54,7 +53,7 @@ app.post('/allow-notifications', async (req, res) =>{
       await revokeUserNotificationToken(phoneNumber, notiToken);
       await storeUserNotificationToken(phoneNumber, notiToken);
     }
-
+    res.send(true);
   } catch (err){
     console.log(err);
     res.send(false);
@@ -66,7 +65,7 @@ app.post('/logout', async (req, res) =>{
       const phoneNumber = JSON.parse(req.body.userNumber);
       const notiToken = JSON.parse(req.body.userToken);
       await revokeUserNotificationToken(phoneNumber, notiToken);
-      res.send(true)
+      res.status(200).send(true)
     } catch {
       console.log(err);
       res.send(false);
