@@ -27,9 +27,6 @@ router.post('/verify-otp', async (req, res) =>{
       res.json(tokens);
     }
     if(otpVerified === "pending"){
-      const refresh = jwtService.generateRefreshToken(userPhoneNumber);
-      const access = jwtService.generateAccessToken(userPhoneNumber);
-      const tokens = {refreshToken: refresh, accessToken: access};
       console.log("Incorrect password");
       res.status(400)
     }
