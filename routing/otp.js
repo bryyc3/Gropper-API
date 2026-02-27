@@ -7,8 +7,7 @@ dotenv.config();
 const router = Router();
 
 router.post('/generate-otp', async (req, res) =>{
-  console.log("generating")
-    const userPhoneNumber = req.body.phoneNumber;
+    const userPhoneNumber = JSON.parse(req.body.phoneNumber);
 
     if(userPhoneNumber == process.env.DEVTEST_PHONE){
       res.status(200).send(true)
@@ -21,7 +20,7 @@ router.post('/generate-otp', async (req, res) =>{
 })//send user otp for authorization 
   
 router.post('/verify-otp', async (req, res) =>{
-    const userPhoneNumber = req.body.phoneNumber;
+    const userPhoneNumber = JSON.parse(req.body.phoneNumber);
     const enteredOtp = JSON.parse(req.body.userCode);
     
     if(userPhoneNumber == process.env.DEVTEST_PHONE && enteredOtp == process.env.DEVTEST_PASSWORD){
