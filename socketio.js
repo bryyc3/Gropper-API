@@ -11,7 +11,7 @@ export default async function socketHandler(io, socket){
     
     try{
       const payload = verifySocketToken(token);
-      const user = JSON.parse(payload.phoneNumber);
+      const user = payload.phoneNumber;
 
       if(!user){
         socket.disconnect();
